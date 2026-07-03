@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MIO — Cebinde yaşayan özel yapay zekâ</title>
+<meta name="description" content="MIO — tamamen cihazda çalışan, internetsiz, gizlilik-öncelikli kişisel yapay zekâ asistanı. Zero cloud, zero telemetry." />
+<meta name="theme-color" content="#06060f" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="apple-touch-icon" href="og.png" />
+<!-- Open Graph / LinkedIn -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="MIO" />
+<meta property="og:title" content="MIO — Cebinde yaşayan özel yapay zekâ" />
+<meta property="og:description" content="İnternetsiz, gizlilik-öncelikli kişisel yaşam asistanı. On-device LLM · RAG hafıza · AES-256." />
+<meta property="og:url" content="https://barisaliskan.github.io/mio/" />
+<meta property="og:image" content="https://barisaliskan.github.io/mio/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="MIO — Cebinde yaşayan özel yapay zekâ" />
+<meta name="twitter:description" content="İnternetsiz, gizlilik-öncelikli kişisel yaşam asistanı. On-device LLM · RAG hafıza · AES-256." />
+<meta name="twitter:image" content="https://barisaliskan.github.io/mio/og.png" />
+<style>
+:root{
+  --bg:#06060f; --bg2:#0c0c1c;
+  --teal:#27e0cf; --blue:#5a86ff; --purple:#9a6bff;
+  --ink:#f4f5fb; --muted:#9aa1bd; --faint:#5e6588;
+  --line:rgba(255,255,255,.09);
+  --card:rgba(18,20,34,.55);
+  --grad:linear-gradient(120deg,var(--teal),var(--blue) 55%,var(--purple));
+  --maxw:1180px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden; line-height:1.5;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 6vw}
+.grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ambient background */
+#bgfx{position:fixed;inset:0;z-index:-2;overflow:hidden;
+  background:radial-gradient(120% 90% at 75% -5%,#14142c 0%,var(--bg2) 42%,var(--bg) 100%)}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.42;will-change:transform}
+#orb1{width:52vw;height:52vw;background:radial-gradient(circle,rgba(39,224,207,.55),transparent 66%);left:-14vw;top:-12vh}
+#orb2{width:56vw;height:56vw;background:radial-gradient(circle,rgba(154,107,255,.5),transparent 66%);right:-16vw;top:32vh}
+#orb3{width:44vw;height:44vw;background:radial-gradient(circle,rgba(90,134,255,.4),transparent 66%);left:20vw;bottom:-14vh}
+#grid{position:fixed;inset:0;z-index:-1;opacity:.06;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(80% 60% at 50% 20%,#000,transparent 80%);
+  -webkit-mask-image:radial-gradient(80% 60% at 50% 20%,#000,transparent 80%)}
+
+/* NAV */
+header{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .4s,backdrop-filter .4s,border-color .4s;
+  border-bottom:1px solid transparent}
+header.scrolled{background:rgba(6,6,15,.72);backdrop-filter:blur(16px);border-bottom-color:var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+.logo{display:flex;align-items:center;gap:.6rem;font-weight:800;letter-spacing:.06em;font-size:1.2rem}
+.logo .dot{width:14px;height:14px;border-radius:50%;background:var(--grad);box-shadow:0 0 16px rgba(90,134,255,.7)}
+.navlinks{display:flex;gap:2.2rem;font-size:.95rem;color:var(--muted);font-weight:500}
+.navlinks a{transition:color .2s}.navlinks a:hover{color:var(--ink)}
+.navcta{padding:.6rem 1.3rem;border-radius:100px;font-weight:700;font-size:.9rem;color:#06060f;background:var(--grad);
+  box-shadow:0 10px 30px rgba(90,134,255,.32);transition:transform .2s,box-shadow .2s}
+.navcta:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(90,134,255,.5)}
+@media(max-width:760px){.navlinks{display:none}}
+
+/* generic reveal */
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}.reveal.d4{transition-delay:.32s}
+
+/* section shells */
+section{position:relative}
+.eyebrow{display:inline-block;font-size:.82rem;letter-spacing:.32em;text-transform:uppercase;font-weight:700;
+  margin-bottom:1.2rem;padding:.4rem .9rem;border:1px solid var(--line);border-radius:100px;color:var(--muted)}
+.eyebrow.g{color:transparent}
+h1,h2,h3{letter-spacing:-.02em;line-height:1.05;font-weight:800}
+.stitle{font-size:clamp(2rem,4.4vw,3.4rem);max-width:20ch}
+.slead{margin-top:1.4rem;font-size:clamp(1.02rem,1.5vw,1.25rem);color:var(--muted);max-width:56ch;line-height:1.6;font-weight:450}
+
+/* ============ HERO ============ */
+.hero{min-height:100vh;display:flex;align-items:center;padding:120px 0 60px}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:3vw;align-items:center;width:100%}
+.hero-badge{display:inline-flex;align-items:center;gap:.6rem;font-size:.85rem;font-weight:600;color:var(--muted);
+  padding:.5rem 1rem;border:1px solid var(--line);border-radius:100px;background:rgba(255,255,255,.02);margin-bottom:1.8rem}
+.hero-badge .pill{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(39,224,207,.18);animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(39,224,207,.22)}50%{box-shadow:0 0 0 9px rgba(39,224,207,0)}}
+.hero h1{font-size:clamp(2.6rem,6vw,5rem);letter-spacing:-.03em}
+.hero .sub{margin-top:1.8rem;font-size:clamp(1.05rem,1.6vw,1.35rem);color:var(--muted);max-width:44ch;line-height:1.6;font-weight:450}
+.hero-cta{margin-top:2.6rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+.btn{padding:.95rem 1.8rem;border-radius:100px;font-weight:700;font-size:1rem;transition:transform .2s,box-shadow .2s,border-color .2s}
+.btn.primary{color:#06060f;background:var(--grad);box-shadow:0 14px 40px rgba(90,134,255,.36)}
+.btn.primary:hover{transform:translateY(-3px);box-shadow:0 20px 54px rgba(90,134,255,.5)}
+.btn.ghost{border:1px solid var(--line);color:var(--ink);background:rgba(255,255,255,.02)}
+.btn.ghost:hover{border-color:rgba(255,255,255,.3);transform:translateY(-3px)}
+.hero-stats{margin-top:3rem;display:flex;gap:2.6rem;flex-wrap:wrap}
+.hero-stats .st .n{font-size:1.7rem;font-weight:800}
+.hero-stats .st .l{font-size:.82rem;color:var(--faint);letter-spacing:.06em;margin-top:.2rem}
+
+/* phone mockup */
+.phone-stage{display:flex;justify-content:center;align-items:center;perspective:1600px}
+.phone{position:relative;width:min(310px,74vw);aspect-ratio:1080/2221;border-radius:44px;
+  background:linear-gradient(160deg,#23243a,#0a0a14 62%);padding:9px;
+  box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07) inset,0 0 90px rgba(90,134,255,.2);
+  transform-style:preserve-3d;animation:floaty 7s ease-in-out infinite;will-change:transform}
+.phone::before{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  width:26%;height:8px;background:#05050c;border-radius:10px;z-index:5}
+.phone .screen{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:#06070d}
+.phone .screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s}
+.phone .screen img.show{opacity:1}
+.phone .glow{position:absolute;inset:-2px;border-radius:44px;pointer-events:none;
+  box-shadow:0 0 70px 6px rgba(39,224,207,.16);z-index:-1}
+@keyframes floaty{0%,100%{transform:translateY(-10px) rotateX(2deg) rotateY(-6deg)}50%{transform:translateY(10px) rotateX(-1.5deg) rotateY(-6deg)}}
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:3rem}
+  .phone-stage{order:-1}
+  .phone{animation:floaty-m 7s ease-in-out infinite}
+}
+@keyframes floaty-m{0%,100%{transform:translateY(-8px)}50%{transform:translateY(8px)}}
+
+/* marquee tech strip */
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:1.4rem 0;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.strip .row{display:flex;gap:3.4rem;width:max-content;animation:scrollx 30s linear infinite;white-space:nowrap}
+.strip .row span{font-size:1.05rem;font-weight:700;color:var(--faint);letter-spacing:.02em}
+.strip .row span b{color:var(--muted);font-weight:800}
+@keyframes scrollx{to{transform:translateX(-50%)}}
+
+/* section spacing */
+.sec{padding:110px 0}
+.sec-head{max-width:60ch}
+.center{text-align:center;margin-left:auto;margin-right:auto}
+
+/* value pillars */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;margin-top:3.4rem}
+.pillar{border-radius:22px;padding:2.2rem 1.8rem;background:var(--card);border:1px solid var(--line);
+  transition:transform .3s,border-color .3s,box-shadow .3s}
+.pillar:hover{transform:translateY(-6px);border-color:rgba(39,224,207,.4);box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.pillar .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;margin-bottom:1.3rem;
+  background:linear-gradient(140deg,rgba(39,224,207,.18),rgba(154,107,255,.18));border:1px solid var(--line)}
+.pillar h3{font-size:1.3rem;margin-bottom:.7rem}
+.pillar p{color:var(--muted);font-size:.98rem;line-height:1.55}
+@media(max-width:820px){.pillars{grid-template-columns:1fr}}
+
+/* ===== sticky feature showcase (phone stays, screens change) ===== */
+.showcase{position:relative}
+.sc-grid{display:grid;grid-template-columns:1fr 1fr;gap:4vw;align-items:start}
+.sc-phone-col{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center}
+.sc-phone{position:relative;width:min(300px,72vw);aspect-ratio:1080/2221;border-radius:42px;
+  background:linear-gradient(160deg,#23243a,#0a0a14 62%);padding:9px;
+  box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07) inset;transition:box-shadow .6s}
+.sc-phone::before{content:"";position:absolute;top:13px;left:50%;transform:translateX(-50%);
+  width:26%;height:7px;background:#05050c;border-radius:10px;z-index:5}
+.sc-screen{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:#06070d}
+.sc-screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.04);
+  transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .9s cubic-bezier(.4,0,.2,1)}
+.sc-screen img.show{opacity:1;transform:scale(1)}
+.sc-steps{display:flex;flex-direction:column}
+.sc-step{min-height:82vh;display:flex;flex-direction:column;justify-content:center;padding:2rem 0}
+.sc-step .k{font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;font-weight:700;margin-bottom:1rem}
+.sc-step h3{font-size:clamp(1.7rem,3vw,2.5rem);margin-bottom:1.2rem}
+.sc-step p{color:var(--muted);font-size:1.1rem;line-height:1.65;max-width:42ch}
+.sc-step ul{list-style:none;margin-top:1.4rem;display:flex;flex-direction:column;gap:.8rem}
+.sc-step li{color:var(--muted);font-size:1.02rem;padding-left:1.6rem;position:relative;line-height:1.5}
+.sc-step li::before{content:"";position:absolute;left:0;top:.55em;width:9px;height:9px;border-radius:50%;background:var(--grad)}
+.sc-step{opacity:.32;transition:opacity .5s}
+.sc-step.active{opacity:1}
+@media(max-width:900px){
+  .sc-grid{grid-template-columns:1fr}
+  .sc-phone-col{position:relative;height:auto;top:auto;margin-bottom:2rem}
+  .sc-step{min-height:auto;padding:1.5rem 0;opacity:1}
+  .sc-phone{width:min(260px,66vw)}
+}
+
+/* comparison */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:3.4rem}
+.cmp-col{border-radius:22px;padding:2.4rem 2rem;border:1px solid var(--line);background:var(--card)}
+.cmp-col.mio{border-color:rgba(39,224,207,.42);background:rgba(20,40,46,.34);box-shadow:0 0 60px rgba(39,224,207,.1)}
+.cmp-col h3{font-size:1.4rem;margin-bottom:1.6rem}
+.cmp-col.mio h3{color:transparent;background:var(--grad);-webkit-background-clip:text;background-clip:text}
+.cmp-col ul{list-style:none}
+.cmp-col li{display:flex;gap:.8rem;padding:1rem 0;border-top:1px solid var(--line);color:var(--muted);font-size:1rem;line-height:1.4}
+.cmp-col li:first-child{border-top:0}
+.cmp-col.mio li{color:#e3e7f2}
+.tick{color:var(--teal);font-weight:800}.cross{color:#ff6b8a;font-weight:800}
+@media(max-width:820px){.cmp{grid-template-columns:1fr}}
+
+/* architecture */
+.arch{margin-top:3.4rem;display:flex;flex-direction:column;align-items:center;gap:.9rem}
+.arow{display:flex;gap:1.4rem;justify-content:center;flex-wrap:wrap;width:100%}
+.abox{border-radius:16px;padding:1.3rem 1.6rem;background:rgba(18,20,34,.7);border:1px solid var(--line);text-align:center;min-width:230px;flex:1;max-width:340px}
+.abox .t{font-size:1.15rem;font-weight:700}
+.abox .s{font-size:.85rem;color:var(--muted);margin-top:.35rem}
+.abox.hl{border-color:rgba(90,134,255,.5);box-shadow:0 0 40px rgba(90,134,255,.16)}
+.aarrow{color:var(--faint);font-size:1.3rem}
+.abadge{margin-top:1.6rem;padding:.7rem 1.6rem;border-radius:100px;font-size:.95rem;font-weight:700;color:#06202a;background:var(--grad)}
+
+/* model catalog */
+.mdl{margin-top:3.2rem;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--card)}
+.mdl-row{display:grid;grid-template-columns:1.4fr 1.3fr .7fr .9fr .9fr 1fr;gap:1rem;align-items:center;padding:1.3rem 1.6rem;border-top:1px solid var(--line)}
+.mdl-row.head{border-top:0;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:700;background:rgba(255,255,255,.02)}
+.mdl-tier{display:flex;align-items:center;gap:.7rem;font-weight:800}
+.mdl-tier i{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 12px currentColor}
+.mdl-row .m{font-weight:700;color:#e6eaf5}
+.mdl-row .v{color:var(--muted);font-weight:600;font-size:.95rem}
+.mdl-row .dev{font-weight:800;color:transparent;background:var(--grad);-webkit-background-clip:text;background-clip:text}
+.mdl-note{margin-top:1.4rem;font-size:.95rem;color:var(--muted);display:flex;gap:.6rem;align-items:flex-start}
+.mdl-note .nd{width:10px;height:10px;border-radius:50%;background:var(--grad);flex:none;margin-top:.4rem}
+@media(max-width:820px){
+  .mdl{overflow-x:auto}
+  .mdl-row{grid-template-columns:1.4fr 1.3fr .7fr .9fr .9fr 1fr;min-width:680px}
+}
+
+/* code card */
+.tech-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:3vw;align-items:center;margin-top:3rem}
+.code-card{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:rgba(8,10,18,.92);
+  box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 60px rgba(39,224,207,.08)}
+.code-bar{display:flex;align-items:center;gap:.4rem;padding:.9rem 1.1rem;background:rgba(255,255,255,.03);border-bottom:1px solid var(--line)}
+.code-bar i{width:11px;height:11px;border-radius:50%;background:#ff5f57}.code-bar i.y{background:#febc2e}.code-bar i.g{background:#28c840}
+.code-bar .path{margin-left:.6rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;color:var(--muted)}
+.code-body{padding:1.5rem 1.4rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;color:#cdd3e6;overflow-x:auto;white-space:pre}
+.code-body .c{color:#5e6588;font-style:italic}
+.code-body .kw{color:#9a6bff}.code-body .fn{color:#27e0cf}.code-body .str{color:#7fd7a0}
+.tech-exp h3{font-size:1.8rem;margin-bottom:1rem}
+.tech-exp p{color:var(--muted);line-height:1.6;margin-bottom:1.4rem}
+.tech-exp ul{list-style:none;display:flex;flex-direction:column;gap:.8rem}
+.tech-exp li{color:var(--muted);padding-left:1.4rem;position:relative;line-height:1.5}
+.tech-exp li::before{content:"›";position:absolute;left:0;color:var(--teal);font-weight:800}
+@media(max-width:900px){.tech-grid{grid-template-columns:1fr}}
+
+/* tech stack chips */
+.chips{display:flex;flex-wrap:wrap;gap:.9rem;margin-top:3rem}
+.chip{padding:.85rem 1.3rem;border-radius:100px;font-weight:700;font-size:.98rem;color:#dfe3f0;
+  background:rgba(18,20,34,.7);border:1px solid var(--line);transition:transform .2s,border-color .2s}
+.chip:hover{transform:translateY(-3px);border-color:rgba(39,224,207,.4)}
+.chip b{color:transparent;background:var(--grad);-webkit-background-clip:text;background-clip:text}
+
+/* integrations grid */
+.integ{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-top:3.2rem}
+.icell{border-radius:18px;padding:1.6rem 1.2rem;background:var(--card);border:1px solid var(--line);text-align:center;transition:transform .25s,border-color .25s}
+.icell:hover{transform:translateY(-4px);border-color:rgba(90,134,255,.4)}
+.icell .e{font-size:1.7rem;margin-bottom:.7rem}
+.icell .t{font-weight:700;font-size:.98rem}
+.icell .s{font-size:.8rem;color:var(--faint);margin-top:.25rem}
+@media(max-width:820px){.integ{grid-template-columns:repeat(2,1fr)}}
+
+/* roadmap */
+.road{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem 3rem;margin-top:3.2rem}
+.ritem{display:flex;gap:1.1rem;align-items:flex-start;padding:1.2rem 0;border-top:1px solid var(--line)}
+.ritem .no{font-size:1.3rem;font-weight:800;color:transparent;background:var(--grad);-webkit-background-clip:text;background-clip:text;min-width:2.2rem}
+.ritem .tx{color:#e3e7f2;line-height:1.4}
+@media(max-width:820px){.road{grid-template-columns:1fr}}
+
+/* final CTA */
+.final{text-align:center;padding:130px 0}
+.final h2{font-size:clamp(2.2rem,5vw,4rem)}
+.final p{margin-top:1.4rem;color:var(--muted);font-size:1.2rem;max-width:48ch;margin-left:auto;margin-right:auto}
+.final .hero-cta{justify-content:center}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding:3rem 0;color:var(--faint);font-size:.9rem}
+.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.foot .privacy{display:flex;align-items:center;gap:.5rem}
+.foot .privacy .lk{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal)}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important}
+  .reveal{transition-duration:.001s}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div id="bgfx"><div class="orb" id="orb1"></div><div class="orb" id="orb2"></div><div class="orb" id="orb3"></div></div>
+<div id="grid"></div>
+
+<!-- NAV -->
+<header id="hdr">
+  <div class="wrap nav">
+    <div class="logo"><span class="dot"></span> MIO</div>
+    <nav class="navlinks">
+      <a href="#ozellikler">Özellikler</a>
+      <a href="#neden">Neden MIO</a>
+      <a href="#mimari">Mimari</a>
+      <a href="#modeller">Modeller</a>
+      <a href="#teknoloji">Teknoloji</a>
+    </nav>
+    <a class="navcta" href="#iletisim">Demo iste</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <div class="hero-badge reveal in"><span class="pill"></span> Zero cloud · Zero telemetry · %100 cihazda</div>
+      <h1 class="reveal in">Cebinde yaşayan <span class="grad">özel yapay zekâ</span> asistanı.</h1>
+      <p class="sub reveal in d1">MIO seni tanır, sana özel çalışır — ama verini asla dışarı çıkarmaz. LLM cihazında çalışır, hafızan cihazında şifrelenir. İnternetsiz, hesapsız, sınırsız.</p>
+      <div class="hero-cta reveal in d2">
+        <a class="btn primary" href="#iletisim">Uygulamayı gör</a>
+        <a class="btn ghost" href="#ozellikler">Nasıl çalışır ↓</a>
+      </div>
+      <div class="hero-stats reveal in d3">
+        <div class="st"><div class="n grad">5</div><div class="l">Cihaza göre model kademesi</div></div>
+        <div class="st"><div class="n grad">8</div><div class="l">Cihaz entegrasyonu</div></div>
+        <div class="st"><div class="n grad">AES-256</div><div class="l">Yerel şifreleme</div></div>
+      </div>
+    </div>
+    <div class="phone-stage reveal in d2">
+      <div class="phone">
+        <div class="glow"></div>
+        <div class="screen" id="heroScreen">
+          <img src="assets/01_ana-sayfa.png" alt="MIO ana sayfa" class="show">
+          <img src="assets/04_panel-gunun-ozeti.png" alt="Günün özeti">
+          <img src="assets/03_sohbet.png" alt="Sohbet">
+          <img src="assets/06_modul-kariyer.png" alt="Modüller">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STRIP -->
+<div class="strip">
+  <div class="row" id="marquee">
+    <span><b>React Native</b> · Expo SDK 55</span>
+    <span><b>llama.rn</b> GGUF runtime</span>
+    <span><b>Qwen 3</b> + Trendyol-LLM 7B</span>
+    <span><b>BGE-M3</b> embedding</span>
+    <span><b>RAG</b> semantik hafıza</span>
+    <span><b>SQLite</b> · AES-256</span>
+    <span><b>Big Five</b> kişiselleştirme</span>
+    <span><b>Biyometrik</b> güvenlik</span>
+  </div>
+</div>
+
+<!-- VALUE PILLARS -->
+<section class="sec" id="neden">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Neden MIO</span>
+      <h2 class="stitle">Güçlü asistanlar var — ama <span class="grad">verini buluta taşıyor.</span></h2>
+      <p class="slead">MIO bu ikilemi çözer: cihaz-içi LLM + RAG + şifreli yerel depolama ile hem özel hem kişisel.</p>
+    </div>
+    <div class="pillars">
+      <div class="pillar reveal">
+        <div class="ic">🔒</div>
+        <h3>Gizlilik varsayılan</h3>
+        <p>Tüm veriler cihazında AES-256 ile şifreli saklanır. Bulut yok, hesap yok, telemetri yok. KVKK uyumlu; her entegrasyon için ayrı açık rıza.</p>
+      </div>
+      <div class="pillar reveal d1">
+        <div class="ic">📡</div>
+        <h3>İnternetsiz çalışır</h3>
+        <p>LLM ve embedding cihazında çalışır. Uçak modunda bile tam kapasite. Abonelik yok, kullanım limiti yok — güç tamamen sende.</p>
+      </div>
+      <div class="pillar reveal d2">
+        <div class="ic">🧠</div>
+        <h3>Seni gerçekten tanır</h3>
+        <p>RAG tabanlı kalıcı kişisel hafıza ve Big Five kişilik analizi ile zamanla sana uyum sağlar. Oturumluk değil, kalıcı bir zekâ.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STICKY FEATURE SHOWCASE -->
+<section class="sec showcase" id="ozellikler">
+  <div class="wrap">
+    <div class="sec-head center reveal" style="margin-bottom:2rem">
+      <span class="eyebrow">Ürün turu</span>
+      <h2 class="stitle center">Aşağı kaydır, <span class="grad">MIO'yu tanı.</span></h2>
+    </div>
+    <div class="sc-grid">
+      <!-- sticky phone -->
+      <div class="sc-phone-col">
+        <div class="sc-phone">
+          <div class="sc-screen" id="scScreen">
+            <img data-i="0" src="assets/01_ana-sayfa.png" alt="Ana sayfa" class="show">
+            <img data-i="1" src="assets/02_ana-sayfa-soru-modu.png" alt="Soru modu">
+            <img data-i="2" src="assets/03_sohbet.png" alt="Sohbet">
+            <img data-i="3" src="assets/04_panel-gunun-ozeti.png" alt="Günün özeti">
+            <img data-i="4" src="assets/06_modul-kariyer.png" alt="Modüller">
+            <img data-i="5" src="assets/07_modul-kariyer-analiz-tam-ekran.png" alt="Analiz">
+            <img data-i="6" src="assets/09_gunluk-haberler.png" alt="Haberler">
+            <img data-i="7" src="assets/28_kisisel-bilgiler.png" alt="Profil">
+            <img data-i="8" src="assets/30_gizlilik-politikasi.png" alt="Gizlilik">
+          </div>
+        </div>
+      </div>
+      <!-- steps -->
+      <div class="sc-steps" id="scSteps">
+        <div class="sc-step active" data-i="0">
+          <div class="k grad">Ana sayfa</div>
+          <h3>MIO'ya sor.</h3>
+          <p>Sade, sakin ve premium koyu arayüz. Aklındaki her şeyi tek dokunuşla sor.</p>
+          <ul><li>Hava · adım · uyku · etkinlik tek bakışta</li><li>Yaz ya da sesle sor</li></ul>
+        </div>
+        <div class="sc-step" data-i="1">
+          <div class="k grad">Sor</div>
+          <h3>Anında yanıt.</h3>
+          <p>Her şey cihazında işlenir, dışarı çıkmaz. Yanıtlar gerçek zamanlı üretilir.</p>
+          <ul><li>Doğal dil, Türkçe + İngilizce</li><li>Ham veri değil, özet bağlam kullanılır</li></ul>
+        </div>
+        <div class="sc-step" data-i="2">
+          <div class="k grad">Sohbet</div>
+          <h3>Düşünme ortağın.</h3>
+          <p>Yargılamayan, seni gerçekten dinleyen bir asistan. Soru sorar, somut öneri verir.</p>
+          <ul><li>Kalıcı, şifreli sohbet geçmişi</li><li>RAG ile geçmiş bağlamı hatırlar</li></ul>
+        </div>
+        <div class="sc-step" data-i="3">
+          <div class="k grad">Günün özeti</div>
+          <h3>Tüm günün tek ekranda.</h3>
+          <p>Kişisel karşılama ve anlık görünüm; ruh hali, görevler ve sağlık bir arada.</p>
+          <ul><li>Proaktif içgörüler</li><li>Sağlık · takvim · görev özeti</li></ul>
+        </div>
+        <div class="sc-step" data-i="4">
+          <div class="k grad">Modüller</div>
+          <h3>Hayatının 6 alanı.</h3>
+          <p>Kariyer, Eğitim, Sağlık, Sosyal, Eğlence, Finans — her alan için kişiye özel analiz.</p>
+          <ul><li>Tek dokunuşla derinleş</li><li>Alana özel öneriler</li></ul>
+        </div>
+        <div class="sc-step" data-i="5">
+          <div class="k grad">Analiz</div>
+          <h3>Sana özel içgörü.</h3>
+          <p>0–100 durum skoru; güçlü yönler, odak alanları ve somut adımlar.</p>
+          <ul><li>Zamanlanmış otomatik analiz</li><li>Alt boyutlarla detaylı skorlama</li></ul>
+        </div>
+        <div class="sc-step" data-i="6">
+          <div class="k grad">Günlük haber</div>
+          <h3>Sana göre haber özeti.</h3>
+          <p>İlgi alanlarına göre günlük derleme — yerel, kaynaklara kayıt olmadan.</p>
+          <ul><li>Gündem, ekonomi, teknoloji, sağlık…</li><li>Teslim saatini sen seç</li></ul>
+        </div>
+        <div class="sc-step" data-i="7">
+          <div class="k grad">Profil</div>
+          <h3>MIO seni tanır.</h3>
+          <p>Profilin cihazında AES-256 ile şifreli. İstediğin bilgiyi ekle ya da çıkar — tam şeffaflık.</p>
+          <ul><li>"MIO ne biliyor?" görünümü</li><li>Big Five kişilik uyumu</li></ul>
+        </div>
+        <div class="sc-step" data-i="8">
+          <div class="k grad">Gizlilik</div>
+          <h3>Tasarımdan gizli.</h3>
+          <p>Veriler cihazında, AES-256 ile şifreli. Bulut yok, hesap yok, telemetri yok.</p>
+          <ul><li>Tek dokunuşla dışa aktar</li><li>İstediğinde tümünü kalıcı sil</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Karşılaştırma</span>
+      <h2 class="stitle">Diğer popüler LLM'lerden <span class="grad">farkı.</span></h2>
+    </div>
+    <div class="cmp">
+      <div class="cmp-col mio reveal">
+        <h3>MIO · cihazda</h3>
+        <ul>
+          <li><span class="tick">✓</span> Tüm veri cihazda, AES-256 şifreli</li>
+          <li><span class="tick">✓</span> İnternetsiz çalışır</li>
+          <li><span class="tick">✓</span> Kalıcı kişisel hafıza (RAG)</li>
+          <li><span class="tick">✓</span> Abonelik yok — ücretsiz</li>
+          <li><span class="tick">✓</span> Kontrol tamamen sende</li>
+        </ul>
+      </div>
+      <div class="cmp-col reveal d1">
+        <h3>Bulut LLM'leri</h3>
+        <ul>
+          <li><span class="cross">✕</span> Veri sunucuya gönderilir</li>
+          <li><span class="cross">✕</span> İnternet zorunlu</li>
+          <li><span class="cross">✕</span> Oturumluk / sınırlı hafıza</li>
+          <li><span class="cross">✕</span> Aylık abonelik</li>
+          <li><span class="cross">✕</span> Veri sağlayıcıda kalır</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="sec" id="mimari">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <span class="eyebrow">Mimari</span>
+      <h2 class="stitle center">Tümü tek cihazda <span class="grad">çalışır.</span></h2>
+    </div>
+    <div class="arch reveal d1">
+      <div class="arow"><div class="abox"><div class="t">Arayüz</div><div class="s">React Native · Expo Router</div></div></div>
+      <div class="aarrow">↓</div>
+      <div class="arow"><div class="abox"><div class="t">Bağlam Kurucu</div><div class="s">token bütçesi · 4K pencere</div></div></div>
+      <div class="aarrow">↓</div>
+      <div class="arow">
+        <div class="abox hl"><div class="t">RAG</div><div class="s">BGE-M3 embedding · vektör arama</div></div>
+        <div class="abox hl"><div class="t">LLM Motoru</div><div class="s">llama.rn · Qwen3 / Trendyol</div></div>
+      </div>
+      <div class="aarrow">↓</div>
+      <div class="arow"><div class="abox"><div class="t">Şifreli Yerel Depo</div><div class="s">SQLite · AES-256 · AndroidKeyStore</div></div></div>
+      <div class="abadge">⛔ Bulut yok · Tümü cihazda</div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH DEEP DIVE (RAG code) -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Teknik · RAG</span>
+      <h2 class="stitle">Cihazda semantik <span class="grad">hafıza.</span></h2>
+    </div>
+    <div class="tech-grid">
+      <div class="code-card reveal">
+        <div class="code-bar"><i></i><i class="y"></i><i class="g"></i><span class="path">core/ai/rag-pipeline.ts</span></div>
+        <div class="code-body"><span class="kw">async</span> <span class="fn">retrieve</span>(query, { topK = 5, moduleType }) {
+  <span class="c">// 1) Soru cihazda embed → 1024-boyut (BGE-M3)</span>
+  <span class="kw">const</span> qv = <span class="kw">await</span> embeddingEngine.<span class="fn">embed</span>(query);
+
+  <span class="c">// 2) Kosinüs benzerliği ile aday anılar (eşik 0.6)</span>
+  <span class="kw">let</span> hits = <span class="kw">await</span> vectorStore.<span class="fn">search</span>(qv, topK * 2, <span class="str">0.6</span>);
+
+  <span class="c">// 3) Güncellik (30g) + modül alakası (×1.15)</span>
+  hits = hits.<span class="fn">map</span>(applyRecencyAndModuleBoost);
+
+  <span class="c">// 4) En iyi 5 anı → sistem promptuna bağlam</span>
+  <span class="kw">return</span> hits.<span class="fn">sort</span>(byScore).<span class="fn">slice</span>(0, topK);
+}</div>
+      </div>
+      <div class="tech-exp reveal d1">
+        <h3>RAG — retrieve tasarımı</h3>
+        <p>Soru ve anılar aynı vektör uzayında değerlendirilir; her şey cihazda, milisaniyeler içinde.</p>
+        <ul>
+          <li>BGE-M3, 1024 boyut, kosinüs benzerliği</li>
+          <li>Güncellik (30g yarılanma) + modül boost (×1.15) ile yeniden sıralama</li>
+          <li>0.6 eşiği gürültüyü eler; en iyi 5 anı sistem promptuna girer</li>
+          <li>512 token yanıta ayrılır; prompt kalan 4K bütçeye sığdırılır</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODEL CATALOG -->
+<section class="sec" id="modeller">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">İndirilebilir modeller</span>
+      <h2 class="stitle">Telefonuna göre <span class="grad">doğru model.</span></h2>
+      <p class="slead">MIO, cihazının RAM'ini okur → donanımına en uygun kademeyi otomatik önerir ve indirir.</p>
+    </div>
+    <div class="mdl reveal d1">
+      <div class="mdl-row head"><span>Seviye</span><span>Model</span><span>Param</span><span>İndirme</span><span>RAM</span><span>Önerilen cihaz</span></div>
+      <div class="mdl-row"><div class="mdl-tier"><i style="background:#22C55E;color:#22C55E"></i>Ultra Hafif</div><div class="m">Qwen3 0.6B</div><div class="v">0.6B</div><div class="v">472 MB</div><div class="v">~650 MB</div><div class="dev">3 GB+</div></div>
+      <div class="mdl-row"><div class="mdl-tier"><i style="background:#00D4FF;color:#00D4FF"></i>Hafif</div><div class="m">Qwen3 1.7B</div><div class="v">1.7B</div><div class="v">1.35 GB</div><div class="v">~1.75 GB</div><div class="dev">4 GB+</div></div>
+      <div class="mdl-row"><div class="mdl-tier"><i style="background:#3B82F6;color:#3B82F6"></i>Standart</div><div class="m">Qwen3 4B · Q3</div><div class="v">4B</div><div class="v">2.13 GB</div><div class="v">~2.5 GB</div><div class="dev">6 GB+</div></div>
+      <div class="mdl-row"><div class="mdl-tier"><i style="background:#9B59FF;color:#9B59FF"></i>Performans</div><div class="m">Qwen3 4B · Q6</div><div class="v">4B</div><div class="v">3.39 GB</div><div class="v">~4 GB</div><div class="dev">8 GB+</div></div>
+      <div class="mdl-row"><div class="mdl-tier"><i style="background:#EAB308;color:#EAB308"></i>Premium</div><div class="m">Trendyol 7B</div><div class="v">7B</div><div class="v">4.68 GB</div><div class="v">~5.5 GB</div><div class="dev">12 GB+</div></div>
+    </div>
+    <div class="mdl-note reveal d2"><span class="nd"></span> Tüm modeller GGUF formatında, llama.rn ile tek runtime üzerinde çalışır; ChatML şablonu ortaktır.</div>
+  </div>
+</section>
+
+<!-- INTEGRATIONS -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Cihaz entegrasyonları</span>
+      <h2 class="stitle">Telefonunla <span class="grad">bağlam kurar.</span></h2>
+      <p class="slead">Ham veri değil özet girer: GPS değil şehir, görsel değil tarih. Yalnızca izin verdiğin kaynaklar.</p>
+    </div>
+    <div class="integ">
+      <div class="icell reveal"><div class="e">❤️</div><div class="t">Sağlık</div><div class="s">adım · uyku</div></div>
+      <div class="icell reveal"><div class="e">📅</div><div class="t">Takvim</div><div class="s">etkinlikler</div></div>
+      <div class="icell reveal"><div class="e">👤</div><div class="t">Rehber</div><div class="s">kişiler</div></div>
+      <div class="icell reveal"><div class="e">📍</div><div class="t">Konum</div><div class="s">şehir · hava</div></div>
+      <div class="icell reveal d1"><div class="e">🎵</div><div class="t">Müzik</div><div class="s">zevk profili</div></div>
+      <div class="icell reveal d1"><div class="e">📷</div><div class="t">Fotoğraf</div><div class="s">tarih · albüm</div></div>
+      <div class="icell reveal d1"><div class="e">📊</div><div class="t">Sensörler</div><div class="s">aktivite</div></div>
+      <div class="icell reveal d1"><div class="e">📰</div><div class="t">Haberler</div><div class="s">ilgi alanları</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section class="sec" id="teknoloji">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Teknoloji yığını</span>
+      <h2 class="stitle">Çıkarım motoru & <span class="grad">teknoloji yığını.</span></h2>
+      <p class="slead">Model tamamen cihazda llama.rn ile çalışır. 6 GB cihaz için KV-cache 4096'ya sabit, çok-çekirdek, offline.</p>
+    </div>
+    <div class="chips">
+      <span class="chip reveal"><b>React Native</b> 0.83</span>
+      <span class="chip reveal">Expo SDK 55</span>
+      <span class="chip reveal">TypeScript</span>
+      <span class="chip reveal"><b>llama.rn</b> 0.11.4</span>
+      <span class="chip reveal">Qwen 3 (GGUF)</span>
+      <span class="chip reveal">Trendyol-LLM 7B</span>
+      <span class="chip reveal"><b>BGE-M3</b> embedding</span>
+      <span class="chip reveal">expo-sqlite (WAL)</span>
+      <span class="chip reveal">Zustand 5</span>
+      <span class="chip reveal">crypto-js · AES-256</span>
+      <span class="chip reveal">AndroidKeyStore</span>
+      <span class="chip reveal">expo-local-authentication</span>
+      <span class="chip reveal">Reanimated v4</span>
+      <span class="chip reveal">EAS Build</span>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Gelecek çalışmalar</span>
+      <h2 class="stitle">Sırada <span class="grad">ne var?</span></h2>
+    </div>
+    <div class="road">
+      <div class="ritem reveal"><div class="no">01</div><div class="tx">MIO'ya özel fine-tune Türkçe model + NPU/GPU hızlandırma</div></div>
+      <div class="ritem reveal d1"><div class="no">02</div><div class="tx">Cihaz-içi sesli asistan (STT / TTS)</div></div>
+      <div class="ritem reveal"><div class="no">03</div><div class="tx">Proaktif, bağlama duyarlı akıllı öneriler</div></div>
+      <div class="ritem reveal d1"><div class="no">04</div><div class="tx">Ajan yetenekleri — cihazda güvenli eylemler</div></div>
+      <div class="ritem reveal"><div class="no">05</div><div class="tx">Uçtan uca şifreli cihazlar-arası senkron (opsiyonel)</div></div>
+      <div class="ritem reveal d1"><div class="no">06</div><div class="tx">Widget, kilit ekranı kısayolları, çoklu dil</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final" id="iletisim">
+  <div class="wrap">
+    <h2 class="reveal">Hayatın, <span class="grad">senin cihazında.</span></h2>
+    <p class="reveal d1">Seni tanır, asla dışarı çıkarmaz. MIO'yu canlı görmek ister misiniz?</p>
+    <div class="hero-cta reveal d2">
+      <a class="btn primary" href="mailto:barisoriginal@gmail.com?subject=MIO%20demo%20talebi">Demo iste</a>
+      <a class="btn ghost" href="#ozellikler">Özellikleri tekrar gör</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div class="logo"><span class="dot"></span> MIO</div>
+    <div class="privacy"><span class="lk"></span> On-device AI · Zero cloud · Zero telemetry</div>
+    <div>© 2026 · Barış Alışkan</div>
+  </div>
+</footer>
+
+<script>
+// nav background on scroll
+const hdr=document.getElementById('hdr');
+addEventListener('scroll',()=>{hdr.classList.toggle('scrolled',scrollY>20);},{passive:true});
+
+// reveal on scroll
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+},{threshold:.15,rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+
+// hero screen auto-rotate
+(()=>{
+  const imgs=[...document.querySelectorAll('#heroScreen img')];
+  let n=0;
+  setInterval(()=>{
+    imgs[n].classList.remove('show');
+    n=(n+1)%imgs.length;
+    imgs[n].classList.add('show');
+  },2600);
+})();
+
+// sticky showcase: swap phone screen based on active step
+(()=>{
+  const steps=[...document.querySelectorAll('.sc-step')];
+  const imgs=[...document.querySelectorAll('#scScreen img')];
+  let cur=0;
+  const setActive=(idx)=>{
+    if(idx===cur) return;
+    cur=idx;
+    steps.forEach((s,k)=>s.classList.toggle('active',k===idx));
+    imgs.forEach((im,k)=>im.classList.toggle('show',k===idx));
+  };
+  const so=new IntersectionObserver((es)=>{
+    es.forEach(e=>{
+      if(e.isIntersecting && e.intersectionRatio>=.5){
+        setActive(+e.target.dataset.i);
+      }
+    });
+  },{threshold:[.5],rootMargin:'-20% 0px -20% 0px'});
+  steps.forEach(s=>so.observe(s));
+})();
+
+// duplicate marquee content for seamless loop
+(()=>{
+  const row=document.getElementById('marquee');
+  row.innerHTML+=row.innerHTML;
+})();
+
+// subtle parallax on orbs
+(()=>{
+  const o1=document.getElementById('orb1'),o2=document.getElementById('orb2'),o3=document.getElementById('orb3');
+  let t;
+  addEventListener('scroll',()=>{
+    if(t) return;
+    t=requestAnimationFrame(()=>{
+      const y=scrollY;
+      o1.style.transform=`translateY(${y*.06}px)`;
+      o2.style.transform=`translateY(${y*-.04}px)`;
+      o3.style.transform=`translateY(${y*.03}px)`;
+      t=null;
+    });
+  },{passive:true});
+})();
+</script>
+</body>
+</html>
