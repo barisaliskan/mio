@@ -264,6 +264,26 @@ h1,h2,h3{letter-spacing:-.02em;line-height:1.05;font-weight:800}
 .final h2{font-size:clamp(2.2rem,5vw,4rem)}
 .final p{margin-top:1.4rem;color:var(--muted);font-size:1.2rem;max-width:48ch;margin-left:auto;margin-right:auto}
 .final .hero-cta{justify-content:center}
+/* contact form */
+.cform{max-width:540px;margin:3rem auto 0;text-align:left;
+  background:var(--card);border:1px solid var(--line);border-radius:24px;padding:2.4rem 2.2rem;
+  box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.cform .frow{display:flex;gap:1rem}
+.cform .frow>*{flex:1}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:.85rem;color:var(--muted);font-weight:600;margin-bottom:.5rem}
+.field input,.field textarea{width:100%;padding:.85rem 1rem;border-radius:12px;background:rgba(6,7,13,.7);
+  border:1px solid var(--line);color:var(--ink);font-family:inherit;font-size:1rem;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field textarea:focus{outline:none;border-color:rgba(39,224,207,.6);box-shadow:0 0 0 3px rgba(39,224,207,.12)}
+.field textarea{resize:vertical;min-height:96px}
+.cform button{width:100%;margin-top:.4rem;padding:1rem;border:0;border-radius:100px;cursor:pointer;
+  font-family:inherit;font-weight:700;font-size:1.05rem;color:#06060f;background:var(--grad);
+  box-shadow:0 14px 40px rgba(90,134,255,.32);transition:transform .2s,box-shadow .2s,opacity .2s}
+.cform button:hover{transform:translateY(-2px);box-shadow:0 20px 54px rgba(90,134,255,.5)}
+.cform button:disabled{opacity:.6;cursor:default;transform:none}
+.fstatus{margin-top:1rem;text-align:center;font-size:.95rem;min-height:1.2em;transition:opacity .3s}
+.fstatus.ok{color:var(--teal)}.fstatus.err{color:#ff6b8a}
+@media(max-width:520px){.cform .frow{flex-direction:column;gap:0}}
 
 /* footer */
 footer{border-top:1px solid var(--line);padding:3rem 0;color:var(--faint);font-size:.9rem}
@@ -293,7 +313,7 @@ footer{border-top:1px solid var(--line);padding:3rem 0;color:var(--faint);font-s
       <a href="#modeller">Modeller</a>
       <a href="#teknoloji">Teknoloji</a>
     </nav>
-    <a class="navcta" href="mailto:barisoriginal@gmail.com?subject=MIO%20%E2%80%94%20Demo%20talebi&amp;body=Merhaba%20Bar%C4%B1%C5%9F%2C%0A%0AMIO%20uygulamas%C4%B1n%C4%B1n%20demosunu%20g%C3%B6rmek%20istiyorum.%0A%0AAd%20Soyad%3A%0A%C5%9Eirket%20%2F%20Kurum%3A%0ARol%20%2F%20Pozisyon%3A%0AG%C3%B6r%C3%BC%C5%9Fmek%20istedi%C4%9Fim%20konu%3A%0AUygun%20zaman%3A%0A%0ATe%C5%9Fekk%C3%BCrler.">Demo iste</a>
+    <a class="navcta" href="#iletisim">Demo iste</a>
   </div>
 </header>
 
@@ -638,15 +658,21 @@ footer{border-top:1px solid var(--line);padding:3rem 0;color:var(--faint);font-s
 <section class="final" id="iletisim">
   <div class="wrap">
     <h2 class="reveal">Hayatın, <span class="grad">senin cihazında.</span></h2>
-    <p class="reveal d1">Seni tanır, asla dışarı çıkarmaz. MIO'yu canlı görmek ister misiniz?</p>
-    <div class="hero-cta reveal d2">
-      <a class="btn primary" href="mailto:barisoriginal@gmail.com?subject=MIO%20%E2%80%94%20Demo%20talebi&amp;body=Merhaba%20Bar%C4%B1%C5%9F%2C%0A%0AMIO%20uygulamas%C4%B1n%C4%B1n%20demosunu%20g%C3%B6rmek%20istiyorum.%0A%0AAd%20Soyad%3A%0A%C5%9Eirket%20%2F%20Kurum%3A%0ARol%20%2F%20Pozisyon%3A%0AG%C3%B6r%C3%BC%C5%9Fmek%20istedi%C4%9Fim%20konu%3A%0AUygun%20zaman%3A%0A%0ATe%C5%9Fekk%C3%BCrler.">Demo iste</a>
-      <a class="btn ghost" href="#ozellikler">Özellikleri tekrar gör</a>
-    </div>
-    <p class="reveal d3" style="margin-top:1.6rem;color:var(--faint);font-size:.95rem">
-      Buton mail uygulamanı hazır taslakla açar · veya doğrudan
-      <a href="mailto:barisoriginal@gmail.com?subject=MIO%20%E2%80%94%20Demo%20talebi" style="color:var(--muted);border-bottom:1px solid rgba(255,255,255,.2)">barisoriginal@gmail.com</a>
-    </p>
+    <p class="reveal d1">Seni tanır, asla dışarı çıkarmaz. MIO'yu canlı görmek ister misiniz? Formu doldurun, size ulaşayım.</p>
+    <form class="cform reveal d2" id="demoForm" action="https://formsubmit.co/barisoriginal@gmail.com" method="POST">
+      <input type="hidden" name="_subject" value="MIO — Demo talebi">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="text" name="_honey" style="display:none">
+      <div class="frow">
+        <div class="field"><label>Ad Soyad</label><input type="text" name="Ad Soyad" required></div>
+        <div class="field"><label>E-posta</label><input type="email" name="E-posta" required></div>
+      </div>
+      <div class="field"><label>Şirket / Kurum <span style="color:var(--faint)">(opsiyonel)</span></label><input type="text" name="Şirket"></div>
+      <div class="field"><label>Mesaj</label><textarea name="Mesaj" placeholder="Görüşmek istediğiniz konu, uygun zaman…"></textarea></div>
+      <button type="submit" id="demoBtn">Demo iste</button>
+      <div class="fstatus" id="fstatus"></div>
+    </form>
   </div>
 </section>
 
@@ -721,6 +747,38 @@ document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
       t=null;
     });
   },{passive:true});
+})();
+
+// demo form — AJAX submit (sayfadan ayrılmadan)
+(()=>{
+  const form=document.getElementById('demoForm');
+  const btn=document.getElementById('demoBtn');
+  const status=document.getElementById('fstatus');
+  if(!form) return;
+  form.addEventListener('submit',async(e)=>{
+    e.preventDefault();
+    if(form._honey && form._honey.value) return; // bot tuzağı
+    btn.disabled=true; const label=btn.textContent; btn.textContent='Gönderiliyor…';
+    status.className='fstatus'; status.textContent='';
+    try{
+      const res=await fetch('https://formsubmit.co/ajax/barisoriginal@gmail.com',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify(Object.fromEntries(new FormData(form)))
+      });
+      const data=await res.json();
+      if(res.ok && (data.success==='true'||data.success===true)){
+        form.reset();
+        status.className='fstatus ok';
+        status.textContent='✓ Teşekkürler! Mesajınız iletildi, en kısa sürede dönüş yapacağım.';
+        btn.textContent='Gönderildi';
+      }else throw new Error(data.message||'hata');
+    }catch(err){
+      status.className='fstatus err';
+      status.innerHTML='Gönderilemedi. Lütfen doğrudan <a href="mailto:barisoriginal@gmail.com" style="color:inherit;text-decoration:underline">barisoriginal@gmail.com</a> yazın.';
+      btn.disabled=false; btn.textContent=label;
+    }
+  });
 })();
 </script>
 </body>
